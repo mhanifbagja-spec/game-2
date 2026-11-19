@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hutan Logika / Logic Forest - Game Edukasi Informatika SMP</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka (Cartoon/Game Title) & Nunito (Legible UI) -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tone.js untuk efek suara sintetis tanpa aset eksternal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Fredoka', 'sans-serif'],
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        forest: {
+                            dark: '#1B4332',
+                            main: '#2D6A4F',
+                            light: '#52B788',
+                            mint: '#D8F3DC',
+                        },
+                        wood: {
+                            dark: '#4A2E1B',
+                            main: '#7F5539',
+                            light: '#B08968',
+                            cream: '#EDE0D4',
+                        },
+                        gold: {
+                            main: '#F59E0B',
+                            light: '#FDE68A',
+                        },
+                        sky: {
+                            light: '#E0F2FE',
+                            main: '#38BDF8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: linear-gradient(180deg, #BAE6FD 0%, #E0F2FE 35%, #D8F3DC 70%, #95D5B2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Animasi Mengambang & Halus */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+            50% { box-shadow: 0 0 20px 6px rgba(245, 158, 11, 0.4); }
+        }
+        .glow-gold {
+            animation: pulse-glow 2.5s infinite;
+        }
+
+        /* Tombol Game 3D Kartun */
+        .btn-game {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom-width: 5px;
+        }
+        .btn-game:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+        .btn-game:active:not(:disabled) {
+            transform: translateY(3px);
+            border-bottom-width: 2px;
+        }
+        .btn-game:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Papan Kayu */
+        .wood-panel {
+            background-color: #FDF8F2;
+            border: 4px solid #7F5539;
+            box-shadow: 0 10px 25px -5px rgba(74, 46, 27, 0.25), inset 0 2px 0 rgba(255,255,255,0.8);
+        }
+
+        /* Dekorasi Latar Hutan */
+        .forest-bg-pattern {
+            background-image: radial-gradient(#52B788 1.5px, transparent 1.5px);
+            background-size: 28px 28px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #EDE0D4;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #B08968;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-800 flex flex-col justify-between min-h-screen relative">
+
+    <!-- Dekorasi Awan & Pohon Latar Belakang -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <!-- Awan -->
+        <svg class="absolute top-8 left-[5%] w-32 h-16 text-white/80 animate-float" viewBox="0 0 120 60" fill="currentColor">
+            <path d="M25,50 H95 A20,20 0 0,0 95,10 A25,25 0 0,0 50,15 A18,18 0 0,0 25,50 Z"/>
+        </svg>
+        <svg class="absolute top-14 right-[10%] w-40 h-20 text-white/70 animate-float" style="animation-delay: 1.5s;" viewBox="0 0 120 60" fill="currentColor">
+            <path d="M25,50 H95 A20,20 0 0,0 95,10 A25,25 0 0,0 50,15 A18,18 0 0,0 25,50 Z"/>
+        </svg>
+        <!-- Siluet Bukit & Pepohonan Bawah -->
+        <svg class="absolute bottom-0 left-0 w-full h-36 text-forest-main/20" preserveAspectRatio="none" viewBox="0 0 1440 160" fill="currentColor">
+            <path d="M0,96L80,106.7C160,117,320,139,480,133.3C640,128,800,96,960,90.7C1120,85,1280,107,1360,117.3L1440,128L1440,160L0,160Z"></path>
+        </svg>
+    </div>
+
+    <!-- HEADER / NAVBAR UTAMA -->
+    <header class="relative z-20 w-full max-w-6xl mx-auto px-4 pt-4 pb-2 flex flex-wrap items-center justify-between gap-3">
+        <!-- Logo & Judul -->
+        <div onclick="goHome()" class="cursor-pointer flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border-2 border-forest-main shadow-md hover:scale-[1.02] transition">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-forest-light to-forest-dark flex items-center justify-center text-white text-xl shadow-inner">
+                🌲
+            </div>
+            <div>
+                <h1 id="nav-title" class="font-display font-bold text-lg sm:text-xl text-forest-dark leading-tight tracking-wide">
+                    HUTAN LOGIKA
+                </h1>
+                <p id="nav-subtitle" class="text-xs font-bold text-wood-main">
+                    Informatika SMP Kelas VII
+                </p>
+            </div>
+        </div>
+
+        <!-- Status Skor & Kontrol Kanan -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <!-- Skor & Bintang -->
+            <div id="hud-stats" class="hidden items-center gap-3 bg-amber-50/95 border-2 border-amber-400 px-3.5 py-1.5 rounded-2xl shadow-sm">
+                <div class="flex items-center gap-1 font-display font-bold text-amber-700 text-sm sm:text-base">
+                    <span>⭐</span>
+                    <span id="hud-stars">0/12</span>
+                </div>
+                <div class="h-4 w-0.5 bg-amber-300"></div>
+                <div class="flex items-center gap-1 font-display font-bold text-forest-dark text-sm sm:text-base">
+                    <span>🏆</span>
+                    <span id="hud-score">0</span>
+                </div>
+            </div>
+
+            <!-- Tombol Bahasa (ID / EN) -->
+            <button onclick="toggleLanguage()" class="btn-game bg-sky-500 hover:bg-sky-400 border-sky-700 text-white font-display font-semibold px-3.5 py-2 rounded-xl text-sm flex items-center gap-1.5 shadow">
+                <span>🌐</span>
+                <span id="lang-btn-text">ID | EN</span>
+            </button>
+
+            <!-- Tombol Suara -->
+            <button onclick="toggleSound()" id="sound-btn" class="btn-game bg-emerald-500 hover:bg-emerald-400 border-emerald-700 text-white p-2 rounded-xl text-sm shadow" title="Suara / Sound">
+                🔊
+            </button>
+
+            <!-- Tombol Pengembang / Developer -->
+            <button onclick="openDeveloperModal()" class="btn-game bg-wood-main hover:bg-wood-light border-wood-dark text-white font-display font-semibold px-3.5 py-2 rounded-xl text-sm flex items-center gap-1.5 shadow">
+                <span>👩‍💻</span>
+                <span id="dev-btn-text">Pengembang</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER (DINAMIS ANTAR SCREEN) -->
+    <main id="app-container" class="relative z-10 flex-grow w-full max-w-6xl mx-auto px-4 py-4 flex flex-col justify-center">
+        <!-- Konten dirender oleh JavaScript -->
+    </main>
+
+    <!-- FOOTER RINGKAS -->
+    <footer class="relative z-10 text-center py-3 px-4 text-xs sm:text-sm font-semibold text-forest-dark/80">
+        <span id="footer-text">Petualangan Berpikir Komputasional • Logika Land • Dikembangkan oleh Fitria Badrujalil</span>
+    </footer>
+
+    <!-- MODAL PENGEMBANG / DEVELOPER -->
+    <div id="developer-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="wood-panel rounded-3xl max-w-md w-full p-6 relative animate-[float_0.3s_ease-out]">
+            <button onclick="closeDeveloperModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold flex items-center justify-center transition">
+                ✕
+            </button>
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-4xl shadow-lg border-4 border-white">
+                    👩‍💻
+                </div>
+                <span id="dev-modal-badge" class="inline-block bg-forest-mint text-forest-dark text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
+                    Profil Pengembang Aplikasi
+                </span>
+                <h2 class="font-display text-2xl font-bold text-wood-dark mb-1">Fitria Badrujalil</h2>
+                <p id="dev-modal-role" class="text-sm font-bold text-forest-main mb-4">
+                    Pengembang Media Pembelajaran & Game Edukasi Informatika
+                </p>
+                
+                <div class="bg-amber-50/90 border-2 border-amber-200 rounded-2xl p-4 text-left text-sm space-y-2 mb-5">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-wood-main" id="dev-lbl-app">Aplikasi:</span>
+                        <span class="font-extrabold text-forest-dark">Hutan Logika (Logic Forest)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-bold text-wood-main" id="dev-lbl-subj">Mata Pelajaran:</span>
+                        <span class="font-semibold text-slate-700" id="dev-val-subj">Informatika — SMP Kelas VII</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-bold text-wood-main" id="dev-lbl-topic">Materi Pokok:</span>
+                        <span class="font-semibold text-slate-700" id="dev-val-topic">Berpikir Komputasional</span>
+                    </div>
+                </div>
+
+                <button onclick="closeDeveloperModal()" id="dev-close-btn" class="btn-game w-full bg-forest-main hover:bg-forest-light border-forest-dark text-white font-display font-bold py-2.5 rounded-xl text-base">
+                    Tutup Informasi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BANTUAN / PANDUAN PEDAGOGIS -->
+    <div id="guide-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="wood-panel rounded-3xl max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeGuideModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold flex items-center justify-center">
+                ✕
+            </button>
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-3xl">🤖</span>
+                <div>
+                    <h2 id="guide-title" class="font-display text-2xl font-bold text-forest-dark">Buku Panduan Digi</h2>
+                    <p id="guide-sub" class="text-sm font-semibold text-wood-main">4 Pilar Berpikir Komputasional di Logika Land</p>
+                </div>
+            </div>
+            <div id="guide-content" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                <!-- Diisi dinamis sesuai bahasa -->
+            </div>
+            <button onclick="closeGuideModal()" id="guide-close-btn" class="btn-game w-full bg-amber-500 hover:bg-amber-400 border-amber-700 text-white font-display font-bold py-2.5 rounded-xl">
+                Siap Berpetualang!
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST / MESSAGE BOX CUSTOM (PENGGANTI ALERT) -->
+    <div id="toast-box" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl border-2 font-bold text-sm sm:text-base transition-all max-w-md w-[92%]">
+        <span id="toast-icon" class="text-2xl">💡</span>
+        <span id="toast-msg" class="flex-grow">Pesan sistem</span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* ==========================================================================
+           1. KAMUS DWIBAHASA (BAHASA INDONESIA & ENGLISH)
+           ========================================================================== */
+        const I18N = {
+            id: {
+                appTitle: "HUTAN LOGIKA",
+                appSubtitle: "Informatika SMP Kelas VII",
+                devBtn: "Pengembang",
+                footer: "Petualangan Berpikir Komputasional • Logika Land • Pengembang: Fitria Badrujalil",
+                // Home / Intro
+                welcomeBadge: "PETUALANGAN INFORMATIKA KELAS VII",
+                heroTitle: "Selamat Datang di Logika Land!",
+                heroDesc: "Hutan ajaib sedang dilanda kekacauan! Jembatan kayu putus, gudang beruang berantakan, kebun bunga tak berpola, dan kelinci tersesat di labirin. Ayo bantu Logi Ranger dan Robot Digi memulihkan hutan!",
+                startBtn: "MULAI PETUALANGAN",
+                guideBtn: "Panduan 4 Pilar",
+                // Story Intro Cinematic
+                storyTitle: "Kisah Kekacauan di Logika Land",
+                storyScenes: [
+                    {
+                        speaker: "Digi (Robot Pemandu)",
+                        avatar: "🤖",
+                        text: "Bip-bop! Laporan darurat, Logi Ranger! Badai semalam membuat seluruh sistem di Logika Land kacau balau!"
+                    },
+                    {
+                        speaker: "Logi Ranger (Kamu)",
+                        avatar: "🧭",
+                        text: "Tenang, Digi! Dengan kekuatan Berpikir Komputasional—Dekomposisi, Pola, Abstraksi, dan Algoritma—kita pasti bisa memperbaiki semuanya!"
+                    },
+                    {
+                        speaker: "Penduduk Hutan",
+                        avatar: "🐻🐰",
+                        text: "Tolong kami, Logi Ranger! Jembatan sungai rusak, gudang makanan tercampur, dan jalan pulang kami terhalang!"
+                    }
+                ],
+                nextSceneBtn: "Lanjutkan Cerita ➔",
+                enterMapBtn: "Masuk ke Peta Hutan 🗺️",
+                // Map Screen
+                mapTitle: "Peta Petualangan Logika Land",
+                mapSubtitle: "Pilih pos misi untuk membantu penduduk hutan dan kumpulkan 12 Bintang Logika!",
+                certificateBtn: "Lihat Sertifikat Kelulusan 🎓",
+                resetBtn: "Ulangi Progres",
+                statusDone: "Selesai",
+                statusPlay: "Mainkan Misi",
+                // Guide Modal
+                guideTitle: "Buku Panduan Robot Digi",
+                guideSub: "4 Pilar Berpikir Komputasional untuk Memecahkan Masalah",
+                guideClose: "Mengerti, Ayo Mulai!",
+                pillars: [
+                    {
+                        icon: "🧩",
+                        title: "1. Dekomposisi",
+                        desc: "Memecah masalah besar yang rumit (seperti jembatan roboh) menjadi bagian-bagian kecil yang mudah dikerjakan satu per satu."
+                    },
+                    {
+                        icon: "🔮",
+                        title: "2. Pengenalan Pola",
+                        desc: "Mengamati kesamaan, urutan berulang, atau keteraturan warna dan bentuk untuk memprediksi bagian yang hilang."
+                    },
+                    {
+                        icon: "🔍",
+                        title: "3. Abstraksi",
+                        desc: "Fokus hanya pada informasi atau benda yang penting sesuai tujuan, serta mengabaikan hal-hal yang mengecoh/tidak relevan."
+                    },
+                    {
+                        icon: "⚙️",
+                        title: "4. Algoritma",
+                        desc: "Menyusun langkah-langkah instruksi secara logis, berurutan, dan tepat agar tujuan tercapai tanpa hambatan."
+                    }
+                ],
+                // Developer Modal
+                devBadge: "Profil Pengembang Aplikasi",
+                devRole: "Pengembang Media Pembelajaran & Game Edukasi Informatika",
+                devAppLbl: "Aplikasi:",
+                devSubjLbl: "Mata Pelajaran:",
+                devSubjVal: "Informatika — SMP Kelas VII",
+                devTopicLbl: "Materi Pokok:",
+                devTopicVal: "Berpikir Komputasional",
+                devClose: "Tutup Informasi",
+                // Levels Metadata
+                levels: [
+                    {
+                        id: 1,
+                        pillar: "Dekomposisi",
+                        title: "Jembatan Sungai Deras",
+                        npc: "Berang-berang & Digi",
+                        npcIcon: "🦫",
+                        location: "Sungai Jernih",
+                        story: "Jembatan utama menuju desa terputus! Masalah ini terlihat besar, mari kita pecah menjadi 3 bagian kecil: Fondasi Tiang, Balok Penyangga, dan Papan Lantai.",
+                        instruction: "Pilih dan pasang komponen jembatan yang tepat secara bertahap dari bawah ke atas (Fondasi ➔ Penyangga ➔ Papan) untuk membangun kembali jembatan!",
+                        pedagogyFeedback: "Hebat! Kamu telah menerapkan DEKOMPOSISI dengan memecah pembangunan jembatan yang rumit menjadi sub-bagian kecil yang terstruktur."
+                    },
+                    {
+                        id: 2,
+                        pillar: "Pengenalan Pola",
+                        title: "Kebun Kristal & Bunga Ajaib",
+                        npc: "Rusa Penjaga Kebun",
+                        npcIcon: "🦌",
+                        location: "Taman Hutan",
+                        story: "Tanaman kristal di kebun hutan kehilangan energinya karena beberapa bibit hilang. Setiap baris mengikuti pola keteraturan tertentu!",
+                        instruction: "Amati pola urutan tanaman di setiap baris, lalu pilih benda konkret yang tepat untuk mengisi kotak tanda tanya (?).",
+                        pedagogyFeedback: "Luar biasa! Kamu berhasil menerapkan PENGENALAN POLA dengan menemukan keteraturan urutan bentuk dan warna pada tanaman kebun."
+                    },
+                    {
+                        id: 3,
+                        pillar: "Abstraksi",
+                        title: "Gudang Persediaan Beruang",
+                        npc: "Paman Beruang",
+                        npcIcon: "🐻",
+                        location: "Rumah Kayu",
+                        story: "Musim hujan segera tiba! Paman Beruang harus menyiapkan bekal makanan, tetapi isi gudang tercampur dengan barang rongsokan dan mainan.",
+                        instruction: "Saring isi gudang! Klik HANYA benda yang termasuk kategori MAKANAN & MINUMAN BERGIZI untuk bekal musim hujan. Abaikan benda yang tidak relevan!",
+                        pedagogyFeedback: "Cerdas sekali! Kamu menerapkan ABSTRAKSI dengan menyaring informasi/objek penting (makanan) dan mengabaikan benda pengganggu yang tidak relevan."
+                    },
+                    {
+                        id: 4,
+                        pillar: "Algoritma",
+                        title: "Labirin Pulang Si Kelinci",
+                        npc: "Kelinci Kecil",
+                        npcIcon: "🐰",
+                        location: "Labirin Semak",
+                        story: "Kelinci kecil terpisah dari keluarganya di dalam labirin semak berduri! Susun perintah arah agar Kelinci berjalan menuju wortel emas.",
+                        instruction: "Susun blok perintah langkah (Maju Atas, Bawah, Kiri, Kanan) secara berurutan, lalu tekan JALANKAN PROGRAM untuk memandu Kelinci!",
+                        pedagogyFeedback: "Sempurna! Kamu telah menyusun ALGORITMA berupa urutan instruksi logis yang membawa Kelinci mencapai tujuan dengan selamat."
+                    }
+                ],
+                // Common UI inside levels
+                backToMap: "← Kembali ke Peta",
+                checkAnswer: "Periksa Jawaban ✓",
+                resetLevel: "Reset Ulang",
+                hintBtn: "Petunjuk Digi 💡",
+                nextLevelBtn: "Misi Berikutnya ➔",
+                finishAllBtn: "Lihat Hasil Akhir 🏆",
+                // Level 1 specific
+                l1Stages: [
+                    "Tahap 1: Pasang Fondasi Batu di Dasar Sungai",
+                    "Tahap 2: Pasang Balok Kayu Penyangga Utama",
+                    "Tahap 3: Susun Papan Lantai Jembatan"
+                ],
+                l1Items: [
+                    { id: "stone", name: "Batu Fondasi Kokoh", icon: "🪨", stage: 0 },
+                    { id: "leaf", name: "Tumpukan Daun Kering", icon: "🍂", stage: -1 },
+                    { id: "beam", name: "Balok Kayu Jati", icon: "🪵", stage: 1 },
+                    { id: "rope", name: "Tali Rumput Rapuh", icon: "🧵", stage: -1 },
+                    { id: "plank", name: "Papan Lantai Rapi", icon: "🪜", stage: 2 },
+                    { id: "cloud", name: "Kapas Putih Ringan", icon: "☁️", stage: -1 }
+                ],
+                l1Hint: "Mulailah dari bagian paling dasar (Batu Fondasi), lalu kayu penyangga, dan terakhir papan untuk berjalan di atasnya!",
+                // Level 2 specific
+                l2Hint: "Perhatikan pengulangan dari kiri ke kanan! Misalnya: Apel - Pisang - Apel - Pisang, maka berikutnya adalah Apel.",
+                // Level 3 specific
+                l3TargetLabel: "Keranjang Bekal Paman Beruang (Pilih 5 Makanan/Minuman):",
+                l3Items: [
+                    { id: "honey", name: "Madu Hutan", icon: "🍯", valid: true },
+                    { id: "hammer", name: "Palu Besi", icon: "🔨", valid: false },
+                    { id: "apple", name: "Apel Merah", icon: "🍎", valid: true },
+                    { id: "boot", name: "Sepatu Tua", icon: "🥾", valid: false },
+                    { id: "corn", name: "Jagung Manis", icon: "🌽", valid: true },
+                    { id: "umbrella", name: "Payung Rusak", icon: "☂️", valid: false },
+                    { id: "bread", name: "Roti Gandum", icon: "🍞", valid: true },
+                    { id: "gear", name: "Roda Gigi", icon: "⚙️", valid: false },
+                    { id: "milk", name: "Susu Segar", icon: "🥛", valid: true },
+                    { id: "stone2", name: "Batu Kerikil", icon: "🪨", valid: false }
+                ],
+                l3Hint: "Fokus pada tujuan Paman Beruang: mencari bekal untuk DIMAKAN atau DIMINUM saat musim hujan. Abaikan perkakas dan barang bekas!",
+                // Level 4 specific
+                l4Up: "Atas",
+                l4Down: "Bawah",
+                l4Left: "Kiri",
+                l4Right: "Kanan",
+                l4Run: "JALANKAN PROGRAM ▶",
+                l4Clear: "Hapus Langkah",
+                l4QueueTitle: "Urutan Algoritma Kelinci:",
+                l4Hint: "Hitung jumlah petak dari posisi Kelinci (🐰) ke Wortel (🥕). Hindari semak berduri (🌵) dan batu (🪨)!",
+                // Summary / Certificate
+                certTitle: "SERTIFIKAT PENJELAJAH LOGIKA",
+                certCongrats: "Selamat! Logika Land Kembali Damai!",
+                certBody: "Diberikan kepada Penjelajah Muda atas keberhasilannya menyelesaikan seluruh misi Berpikir Komputasional di Hutan Logika:",
+                certStudentPlaceholder: "Ketik Namamu di Sini...",
+                certScoreLbl: "Total Skor Akhir",
+                certStarsLbl: "Bintang Terkumpul",
+                certRankLbl: "Predikat Logika",
+                ranks: {
+                    master: "Master Arsitek Logika 🌟",
+                    explorer: "Penjelajah Hutan Handal 🧭",
+                    apprentice: "Petualang Muda Semangat 🌱"
+                }
+            },
+            en: {
+                appTitle: "LOGIC FOREST",
+                appSubtitle: "7th Grade Informatics",
+                devBtn: "Developer",
+                footer: "Computational Thinking Adventure • Logika Land • Developed by Fitria Badrujalil",
+                welcomeBadge: "7TH GRADE INFORMATICS ADVENTURE",
+                heroTitle: "Welcome to Logika Land!",
+                heroDesc: "The magical forest is in chaos! The wooden bridge is broken, the bear's pantry is messy, the flower garden lacks patterns, and the bunny is lost in a maze. Help Logi Ranger and Digi the Robot restore the forest!",
+                startBtn: "START ADVENTURE",
+                guideBtn: "4 Pillars Guide",
+                storyTitle: "The Chaos in Logika Land",
+                storyScenes: [
+                    {
+                        speaker: "Digi (Guide Robot)",
+                        avatar: "🤖",
+                        text: "Beep-boop! Emergency report, Logi Ranger! Last night's storm scrambled all systems across Logika Land!"
+                    },
+                    {
+                        speaker: "Logi Ranger (You)",
+                        avatar: "🧭",
+                        text: "Don't worry, Digi! With Computational Thinking—Decomposition, Pattern Recognition, Abstraction, and Algorithms—we can fix everything!"
+                    },
+                    {
+                        speaker: "Forest Residents",
+                        avatar: "🐻🐰",
+                        text: "Please help us, Logi Ranger! The river bridge is broken, our food storage is mixed up, and our path home is blocked!"
+                    }
+                ],
+                nextSceneBtn: "Continue Story ➔",
+                enterMapBtn: "Enter Forest Map 🗺️",
+                mapTitle: "Logika Land Adventure Map",
+                mapSubtitle: "Select a mission post to help forest residents and collect all 12 Logic Stars!",
+                certificateBtn: "View Graduation Certificate 🎓",
+                resetBtn: "Reset Progress",
+                statusDone: "Completed",
+                statusPlay: "Play Mission",
+                guideTitle: "Digi's Field Guide",
+                guideSub: "4 Pillars of Computational Thinking to Solve Problems",
+                guideClose: "Got It, Let's Go!",
+                pillars: [
+                    {
+                        icon: "🧩",
+                        title: "1. Decomposition",
+                        desc: "Breaking down a big, complex problem (like a broken bridge) into smaller, manageable parts solved step-by-step."
+                    },
+                    {
+                        icon: "🔮",
+                        title: "2. Pattern Recognition",
+                        desc: "Observing similarities, repeating sequences, or regularities in shapes and colors to predict missing elements."
+                    },
+                    {
+                        icon: "🔍",
+                        title: "3. Abstraction",
+                        desc: "Focusing only on essential information or items relevant to the goal while ignoring distracting details."
+                    },
+                    {
+                        icon: "⚙️",
+                        title: "4. Algorithm",
+                        desc: "Designing a logical, step-by-step sequence of instructions to reach a solution accurately."
+                    }
+                ],
+                devBadge: "Application Developer Profile",
+                devRole: "Educational Media & Informatics Game Developer",
+                devAppLbl: "Application:",
+                devSubjLbl: "Subject:",
+                devSubjVal: "Informatics — 7th Grade Junior High",
+                devTopicLbl: "Core Topic:",
+                devTopicVal: "Computational Thinking",
+                devClose: "Close Info",
+                levels: [
+                    {
+                        id: 1,
+                        pillar: "Decomposition",
+                        title: "Rushing River Bridge",
+                        npc: "Beaver & Digi",
+                        npcIcon: "🦫",
+                        location: "Clear River",
+                        story: "The main bridge to the village collapsed! It looks huge, so let's break it into 3 smaller parts: Stone Foundation, Support Beams, and Deck Planks.",
+                        instruction: "Select and install the right bridge components step-by-step from bottom to top (Foundation ➔ Beams ➔ Planks) to rebuild the bridge!",
+                        pedagogyFeedback: "Awesome! You applied DECOMPOSITION by breaking a complex bridge repair into smaller, structured sub-tasks."
+                    },
+                    {
+                        id: 2,
+                        pillar: "Pattern Recognition",
+                        title: "Crystal & Magic Flower Garden",
+                        npc: "Garden Guardian Deer",
+                        npcIcon: "🦌",
+                        location: "Forest Garden",
+                        story: "The crystal plants in the forest garden lost energy because some seeds went missing. Every row follows a specific repeating pattern!",
+                        instruction: "Observe the sequence pattern in each row, then pick the concrete object that fills the question mark (?) box.",
+                        pedagogyFeedback: "Fantastic! You applied PATTERN RECOGNITION by identifying repeating color and shape regularities in the garden."
+                    },
+                    {
+                        id: 3,
+                        pillar: "Abstraction",
+                        title: "Uncle Bear's Supply Pantry",
+                        npc: "Uncle Bear",
+                        npcIcon: "🐻",
+                        location: "Wooden Cabin",
+                        story: "The rainy season is coming! Uncle Bear needs to pack food supplies, but his pantry is mixed up with junk and tools.",
+                        instruction: "Filter the pantry! Click ONLY items that belong to NUTRITIOUS FOOD & DRINKS for the rainy season. Ignore irrelevant objects!",
+                        pedagogyFeedback: "Smart move! You applied ABSTRACTION by filtering essential items (food) and ignoring irrelevant clutter."
+                    },
+                    {
+                        id: 4,
+                        pillar: "Algorithm",
+                        title: "Little Bunny's Home Maze",
+                        npc: "Little Bunny",
+                        npcIcon: "🐰",
+                        location: "Hedge Maze",
+                        story: "Little Bunny got separated from family inside the thorny hedge maze! Arrange directional commands to guide Bunny to the golden carrot.",
+                        instruction: "Arrange movement blocks (Up, Down, Left, Right) in logical order, then press RUN PROGRAM to guide Bunny!",
+                        pedagogyFeedback: "Spot on! You built an ALGORITHM—a clear sequence of logical steps that guided Bunny safely to the goal."
+                    }
+                ],
+                backToMap: "← Back to Map",
+                checkAnswer: "Check Answer ✓",
+                resetLevel: "Reset Level",
+                hintBtn: "Digi's Hint 💡",
+                nextLevelBtn: "Next Mission ➔",
+                finishAllBtn: "View Final Results 🏆",
+                l1Stages: [
+                    "Step 1: Place Stone Foundation on the Riverbed",
+                    "Step 2: Install Main Wooden Support Beams",
+                    "Step 3: Lay Down Wooden Bridge Planks"
+                ],
+                l1Items: [
+                    { id: "stone", name: "Sturdy Foundation Stones", icon: "🪨", stage: 0 },
+                    { id: "leaf", name: "Pile of Dry Leaves", icon: "🍂", stage: -1 },
+                    { id: "beam", name: "Teak Support Beams", icon: "🪵", stage: 1 },
+                    { id: "rope", name: "Fragile Grass Rope", icon: "🧵", stage: -1 },
+                    { id: "plank", name: "Neat Deck Planks", icon: "🪜", stage: 2 },
+                    { id: "cloud", name: "Light White Cotton", icon: "☁️", stage: -1 }
+                ],
+                l1Hint: "Start from the very bottom (Foundation Stones), then wooden support beams, and finally planks to walk across!",
+                l2Hint: "Look at the repetition from left to right! For example: Apple - Banana - Apple - Banana, so the next one is Apple.",
+                l3TargetLabel: "Uncle Bear's Supply Basket (Pick 5 Food/Drink Items):",
+                l3Items: [
+                    { id: "honey", name: "Forest Honey", icon: "🍯", valid: true },
+                    { id: "hammer", name: "Iron Hammer", icon: "🔨", valid: false },
+                    { id: "apple", name: "Red Apple", icon: "🍎", valid: true },
+                    { id: "boot", name: "Old Boot", icon: "🥾", valid: false },
+                    { id: "corn", name: "Sweet Corn", icon: "🌽", valid: true },
+                    { id: "umbrella", name: "Broken Umbrella", icon: "☂️", valid: false },
+                    { id: "bread", name: "Wheat Bread", icon: "🍞", valid: true },
+                    { id: "gear", name: "Metal Gear", icon: "⚙️", valid: false },
+                    { id: "milk", name: "Fresh Milk", icon: "🥛", valid: true },
+                    { id: "stone2", name: "River Pebble", icon: "🪨", valid: false }
+                ],
+                l3Hint: "Focus on Uncle Bear's goal: packing supplies to EAT or DRINK during the rainy season. Ignore tools and junk!",
+                l4Up: "Up",
+                l4Down: "Down",
+                l4Left: "Left",
+                l4Right: "Right",
+                l4Run: "RUN PROGRAM ▶",
+                l4Clear: "Clear Steps",
+                l4QueueTitle: "Bunny's Algorithm Sequence:",
+                l4Hint: "Count the tiles from Bunny (🐰) to the Carrot (🥕). Avoid thorny bushes (🌵) and rocks (🪨)!",
+                certTitle: "LOGIC EXPLORER CERTIFICATE",
+                certCongrats: "Congratulations! Logika Land is Peaceful Again!",
+                certBody: "Awarded to Young Explorer for successfully completing all Computational Thinking missions in Logic Forest:",
+                certStudentPlaceholder: "Type Your Name Here...",
+                certScoreLbl: "Final Total Score",
+                certStarsLbl: "Stars Collected",
+                certRankLbl: "Logic Rank",
+                ranks: {
+                    master: "Master Logic Architect 🌟",
+                    explorer: "Skilled Forest Ranger 🧭",
+                    apprentice: "Eager Young Explorer 🌱"
+                }
+            }
+        };
+
+        /* ==========================================================================
+           2. STATE APLIKASI & SISTEM AUDIO SINTETIS (TONE.JS)
+           ========================================================================== */
+        const state = {
+            lang: 'id',
+            soundEnabled: true,
+            screen: 'home', // 'home' | 'story' | 'map' | 'level' | 'certificate'
+            storyIndex: 0,
+            currentLevelId: 1,
+            studentName: '',
+            progress: {
+                1: { completed: false, stars: 0, score: 0 },
+                2: { completed: false, stars: 0, score: 0 },
+                3: { completed: false, stars: 0, score: 0 },
+                4: { completed: false, stars: 0, score: 0 }
+            },
+            // State spesifik Level 1 (Dekomposisi)
+            l1: {
+                currentStage: 0,
+                mistakes: 0,
+                placed: [false, false, false]
+            },
+            // State spesifik Level 2 (Pola)
+            l2: {
+                answers: [null, null, null],
+                mistakes: 0,
+                rows: [
+                    { seq: ['🍎', '🍌', '🍎', '🍌', '?'], options: ['🍎', '🍇', '🥕'], correct: '🍎' },
+                    { seq: ['🌻', '🍄', '🍄', '🌻', '🍄', '?'], options: ['🌻', '🍄', '🌲'], correct: '🍄' },
+                    { seq: ['💎', '🍃', '🔥', '💎', '🍃', '?'], options: ['💎', '🍃', '🔥'], correct: '🔥' }
+                ]
+            },
+            // State spesifik Level 3 (Abstraksi)
+            l3: {
+                selectedIds: [],
+                mistakes: 0
+            },
+            // State spesifik Level 4 (Algoritma)
+            l4: {
+                commands: [],
+                bunnyPos: { r: 3, c: 0 },
+                isRunning: false,
+                mistakes: 0,
+                // Grid 5x5: 0 = jalan, 1 = rintangan (semak/batu), 2 = wortel tujuan
+                grid: [
+                    [1, 0, 0, 0, 2],
+                    [0, 0, 1, 1, 0],
+                    [0, 1, 0, 0, 0],
+                    [0, 0, 0, 1, 0],
+                    [1, 1, 0, 0, 0]
+                ]
+            }
+        };
+
+        // Efek Suara Web Audio / Tone.js
+        let synth = null;
+        function playSFX(type) {
+            if (!state.soundEnabled) return;
+            try {
+                if (!synth && typeof Tone !== 'undefined') {
+                    synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                    synth.volume.value = -8;
+                }
+                if (!synth) return;
+                if (Tone.context.state !== 'running') Tone.start();
+
+                const now = Tone.now();
+                if (type === 'click') {
+                    synth.triggerAttackRelease("C5", "32n", now);
+                } else if (type === 'success') {
+                    synth.triggerAttackRelease(["C5", "E5", "G5"], "16n", now);
+                } else if (type === 'error') {
+                    synth.triggerAttackRelease(["E3", "Eb3"], "8n", now);
+                } else if (type === 'win') {
+                    synth.triggerAttackRelease("C5", "16n", now);
+                    synth.triggerAttackRelease("E5", "16n", now + 0.12);
+                    synth.triggerAttackRelease("G5", "16n", now + 0.24);
+                    synth.triggerAttackRelease("C6", "8n", now + 0.36);
+                }
+            } catch (e) {
+                // Abaikan jika browser memblokir audio sebelum interaksi pertama
+            }
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            document.getElementById('sound-btn').textContent = state.soundEnabled ? '🔊' : '🔇';
+            if (state.soundEnabled) playSFX('click');
+        }
+
+        function toggleLanguage() {
+            state.lang = state.lang === 'id' ? 'en' : 'id';
+            playSFX('click');
+            updateStaticUI();
+            render();
+        }
+
+        function t() {
+            return I18N[state.lang];
+        }
+
+        /* ==========================================================================
+           3. NOTIFIKASI TOAST & MODAL KONTROL
+           ========================================================================== */
+        let toastTimer = null;
+        function showToast(msg, type = 'info') {
+            const box = document.getElementById('toast-box');
+            const icon = document.getElementById('toast-icon');
+            const text = document.getElementById('toast-msg');
+
+            box.className = "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border-2 font-bold text-sm sm:text-base transition-all max-w-md w-[92%]";
+            if (type === 'success') {
+                box.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+                icon.textContent = '🌟';
+            } else if (type === 'error') {
+                box.classList.add('bg-rose-50', 'border-rose-500', 'text-rose-900');
+                icon.textContent = '⚠️';
+            } else {
+                box.classList.add('bg-amber-50', 'border-amber-500', 'text-amber-950');
+                icon.textContent = '🤖';
+            }
+
+            text.textContent = msg;
+            box.classList.remove('hidden');
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                box.classList.add('hidden');
+            }, 4000);
+        }
+
+        function openDeveloperModal() {
+            playSFX('click');
+            updateStaticUI();
+            const m = document.getElementById('developer-modal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function closeDeveloperModal() {
+            playSFX('click');
+            const m = document.getElementById('developer-modal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        function openGuideModal() {
+            playSFX('click');
+            updateStaticUI();
+            const m = document.getElementById('guide-modal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function closeGuideModal() {
+            playSFX('click');
+            const m = document.getElementById('guide-modal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        function updateStaticUI() {
+            const langData = t();
+            document.getElementById('nav-title').textContent = langData.appTitle;
+            document.getElementById('nav-subtitle').textContent = langData.appSubtitle;
+            document.getElementById('dev-btn-text').textContent = langData.devBtn;
+            document.getElementById('footer-text').textContent = langData.footer;
+            document.getElementById('lang-btn-text').textContent = state.lang === 'id' ? '🇮🇩 ID' : '🇬🇧 EN';
+
+            // Developer Modal
+            document.getElementById('dev-modal-badge').textContent = langData.devBadge;
+            document.getElementById('dev-modal-role').textContent = langData.devRole;
+            document.getElementById('dev-lbl-app').textContent = langData.devAppLbl;
+            document.getElementById('dev-lbl-subj').textContent = langData.devSubjLbl;
+            document.getElementById('dev-val-subj').textContent = langData.devSubjVal;
+            document.getElementById('dev-lbl-topic').textContent = langData.devTopicLbl;
+            document.getElementById('dev-val-topic').textContent = langData.devTopicVal;
+            document.getElementById('dev-close-btn').textContent = langData.devClose;
+
+            // Guide Modal
+            document.getElementById('guide-title').textContent = langData.guideTitle;
+            document.getElementById('guide-sub').textContent = langData.guideSub;
+            document.getElementById('guide-close-btn').textContent = langData.guideClose;
+            document.getElementById('guide-content').innerHTML = langData.pillars.map(p => `
+                <div class="bg-forest-mint/50 border-2 border-forest-light rounded-2xl p-4">
+                    <div class="text-2xl mb-1">${p.icon}</div>
+                    <h3 class="font-display font-bold text-forest-dark text-base mb-1">${p.title}</h3>
+                    <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">${p.desc}</p>
+                </div>
+            `).join('');
+
+            // Update HUD
+            const totalStars = Object.values(state.progress).reduce((acc, p) => acc + p.stars, 0);
+            const totalScore = Object.values(state.progress).reduce((acc, p) => acc + p.score, 0);
+            document.getElementById('hud-stars').textContent = `${totalStars}/12`;
+            document.getElementById('hud-score').textContent = totalScore;
+
+            const hud = document.getElementById('hud-stats');
+            if (state.screen === 'home') {
+                hud.classList.add('hidden');
+                hud.classList.remove('flex');
+            } else {
+                hud.classList.remove('hidden');
+                hud.classList.add('flex');
+            }
+        }
+
+        /* ==========================================================================
+           4. NAVIGASI HALAMAN (SCREEN ROUTER)
+           ========================================================================== */
+        function goHome() {
+            playSFX('click');
+            state.screen = 'home';
+            render();
+        }
+
+        function startStory() {
+            playSFX('click');
+            state.storyIndex = 0;
+            state.screen = 'story';
+            render();
+        }
+
+        function nextStoryScene() {
+            playSFX('click');
+            if (state.storyIndex < t().storyScenes.length - 1) {
+                state.storyIndex++;
+                render();
+            } else {
+                goToMap();
+            }
+        }
+
+        function goToMap() {
+            playSFX('click');
+            state.screen = 'map';
+            render();
+        }
+
+        function startLevel(id) {
+            playSFX('click');
+            state.currentLevelId = id;
+            state.screen = 'level';
+
+            // Reset state level saat dimulai ulang
+            if (id === 1) {
+                state.l1 = { currentStage: 0, mistakes: 0, placed: [false, false, false] };
+            } else if (id === 2) {
+                state.l2.answers = [null, null, null];
+                state.l2.mistakes = 0;
+            } else if (id === 3) {
+                state.l3 = { selectedIds: [], mistakes: 0 };
+            } else if (id === 4) {
+                state.l4.commands = [];
+                state.l4.bunnyPos = { r: 3, c: 0 };
+                state.l4.isRunning = false;
+                state.l4.mistakes = 0;
+            }
+            render();
+        }
+
+        function completeLevel(id, stars, score, feedbackText) {
+            playSFX('win');
+            const prev = state.progress[id];
+            state.progress[id] = {
+                completed: true,
+                stars: Math.max(prev.stars, stars),
+                score: Math.max(prev.score, score)
+            };
+            updateStaticUI();
+
+            // Tampilkan modal/banner kemenangan di dalam level
+            const banner = document.getElementById('level-victory-overlay');
+            if (banner) {
+                document.getElementById('vic-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+                document.getElementById('vic-score').textContent = `+${score} Poin`;
+                document.getElementById('vic-pedagogy').textContent = feedbackText;
+                banner.classList.remove('hidden');
+                banner.classList.add('flex');
+            }
+        }
+
+        function resetAllProgress() {
+            playSFX('click');
+            state.progress = {
+                1: { completed: false, stars: 0, score: 0 },
+                2: { completed: false, stars: 0, score: 0 },
+                3: { completed: false, stars: 0, score: 0 },
+                4: { completed: false, stars: 0, score: 0 }
+            };
+            showToast(state.lang === 'id' ? 'Progres petualangan telah diatur ulang.' : 'Adventure progress has been reset.', 'info');
+            render();
+        }
+
+        /* ==========================================================================
+           5. RENDER SCREEN UTAMA
+           ========================================================================== */
+        function render() {
+            updateStaticUI();
+            const container = document.getElementById('app-container');
+
+            if (state.screen === 'home') {
+                container.innerHTML = renderHomeScreen();
+            } else if (state.screen === 'story') {
+                container.innerHTML = renderStoryScreen();
+            } else if (state.screen === 'map') {
+                container.innerHTML = renderMapScreen();
+            } else if (state.screen === 'level') {
+                container.innerHTML = renderLevelScreen(state.currentLevelId);
+            } else if (state.screen === 'certificate') {
+                container.innerHTML = renderCertificateScreen();
+            }
+        }
+
+        /* --- SCREEN 1: HALAMAN PEMBUKA (HERO) --- */
+        function renderHomeScreen() {
+            const lang = t();
+            return `
+                <div class="wood-panel rounded-3xl p-6 sm:p-10 max-w-4xl mx-auto w-full text-center relative overflow-hidden">
+                    <!-- Badge Kurikulum -->
+                    <div class="inline-flex items-center gap-2 bg-forest-mint border-2 border-forest-light text-forest-dark font-extrabold text-xs sm:text-sm px-4 py-1.5 rounded-full mb-5">
+                        <span>🌿</span>
+                        <span>${lang.welcomeBadge}</span>
+                    </div>
+
+                    <!-- Ilustrasi Karakter Utama SVG & Kartun -->
+                    <div class="flex justify-center items-end gap-4 sm:gap-8 my-4">
+                        <!-- Robot Digi -->
+                        <div class="flex flex-col items-center animate-float" style="animation-delay: 0.4s;">
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-b from-sky-300 to-sky-500 border-4 border-white shadow-lg flex items-center justify-center text-4xl sm:text-5xl">
+                                🤖
+                            </div>
+                            <span class="mt-2 bg-sky-100 text-sky-900 font-display font-bold text-xs px-3 py-0.5 rounded-full border border-sky-300">Digi</span>
+                        </div>
+
+                        <!-- Logi Ranger -->
+                        <div class="flex flex-col items-center animate-float">
+                            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-b from-emerald-400 to-forest-main border-4 border-amber-300 shadow-xl flex items-center justify-center text-5xl sm:text-6xl">
+                                🧭
+                            </div>
+                            <span class="mt-2 bg-amber-100 text-amber-900 font-display font-bold text-xs px-3 py-0.5 rounded-full border border-amber-400">Logi Ranger</span>
+                        </div>
+
+                        <!-- Penduduk Hutan -->
+                        <div class="flex flex-col items-center animate-float" style="animation-delay: 0.8s;">
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-b from-amber-200 to-amber-400 border-4 border-white shadow-lg flex items-center justify-center text-4xl sm:text-5xl">
+                                🐰
+                            </div>
+                            <span class="mt-2 bg-wood-cream text-wood-dark font-display font-bold text-xs px-3 py-0.5 rounded-full border border-wood-light">Logika Land</span>
+                        </div>
+                    </div>
+
+                    <h2 class="font-display text-3xl sm:text-5xl font-bold text-forest-dark mt-4 mb-3 tracking-tight">
+                        ${lang.heroTitle}
+                    </h2>
+                    <p class="text-slate-700 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed mb-8 font-medium">
+                        ${lang.heroDesc}
+                    </p>
+
+                    <!-- Tombol Aksi Utama -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <button onclick="startStory()" class="btn-game glow-gold w-full sm:w-auto bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 border-amber-700 text-amber-950 font-display font-bold text-lg sm:text-xl px-8 py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2">
+                            <span>🚀</span>
+                            <span>${lang.startBtn}</span>
+                        </button>
+                        <button onclick="openGuideModal()" class="btn-game w-full sm:w-auto bg-forest-main hover:bg-forest-light border-forest-dark text-white font-display font-bold text-base sm:text-lg px-6 py-4 rounded-2xl shadow flex items-center justify-center gap-2">
+                            <span>📖</span>
+                            <span>${lang.guideBtn}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* --- SCREEN 2: NARASI SINEMATIK PEMBUKA --- */
+        function renderStoryScreen() {
+            const lang = t();
+            const scene = lang.storyScenes[state.storyIndex];
+            const isLast = state.storyIndex === lang.storyScenes.length - 1;
+
+            return `
+                <div class="wood-panel rounded-3xl p-6 sm:p-8 max-w-3xl mx-auto w-full">
+                    <div class="flex items-center justify-between border-b-2 border-wood-cream pb-3 mb-6">
+                        <h2 class="font-display font-bold text-xl sm:text-2xl text-wood-dark flex items-center gap-2">
+                            <span>📜</span>
+                            <span>${lang.storyTitle}</span>
+                        </h2>
+                        <span class="bg-amber-100 text-amber-900 font-bold text-xs px-3 py-1 rounded-full">
+                            ${state.storyIndex + 1} / ${lang.storyScenes.length}
+                        </span>
+                    </div>
+
+                    <!-- Ilustrasi Adegan Hutan -->
+                    <div class="bg-gradient-to-b from-sky-200 via-emerald-100 to-emerald-200 rounded-2xl p-6 mb-6 border-2 border-forest-light flex flex-col items-center justify-center min-h-[200px] relative overflow-hidden">
+                        <div class="text-6xl sm:text-7xl mb-3 animate-float drop-shadow-md">
+                            ${scene.avatar}
+                        </div>
+                        <div class="bg-white/95 backdrop-blur px-4 py-1.5 rounded-full border-2 border-forest-main font-display font-bold text-forest-dark text-sm sm:text-base shadow-sm">
+                            ${scene.speaker}
+                        </div>
+                    </div>
+
+                    <!-- Kotak Dialog Karakter -->
+                    <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 mb-6 shadow-inner">
+                        <p class="text-base sm:text-lg font-semibold text-slate-800 leading-relaxed">
+                            "${scene.text}"
+                        </p>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3">
+                        <button onclick="goToMap()" class="text-sm font-bold text-wood-main hover:text-wood-dark underline px-2">
+                            Skip ➔
+                        </button>
+                        <button onclick="nextStoryScene()" class="btn-game bg-forest-main hover:bg-forest-light border-forest-dark text-white font-display font-bold px-6 py-3 rounded-xl text-base sm:text-lg shadow">
+                            ${isLast ? lang.enterMapBtn : lang.nextSceneBtn}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* --- SCREEN 3: PETA DUNIA LOGIKA LAND --- */
+        function renderMapScreen() {
+            const lang = t();
+            const allCompleted = Object.values(state.progress).every(p => p.completed);
+            const levelColors = [
+                { bg: 'from-sky-400 to-blue-600', border: 'border-blue-800', badge: 'bg-sky-100 text-sky-900' },
+                { bg: 'from-emerald-400 to-green-600', border: 'border-green-800', badge: 'bg-emerald-100 text-emerald-900' },
+                { bg: 'from-amber-400 to-orange-500', border: 'border-orange-800', badge: 'bg-amber-100 text-amber-900' },
+                { bg: 'from-purple-400 to-indigo-600', border: 'border-indigo-800', badge: 'bg-purple-100 text-purple-900' }
+            ];
+
+            return `
+                <div class="w-full max-w-5xl mx-auto">
+                    <!-- Header Peta -->
+                    <div class="wood-panel rounded-3xl p-5 sm:p-6 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div>
+                            <h2 class="font-display text-2xl sm:text-3xl font-bold text-forest-dark flex items-center gap-2">
+                                <span>🗺️</span>
+                                <span>${lang.mapTitle}</span>
+                            </h2>
+                            <p class="text-sm sm:text-base text-slate-600 font-semibold mt-1">
+                                ${lang.mapSubtitle}
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="openGuideModal()" class="btn-game bg-sky-500 hover:bg-sky-400 border-sky-700 text-white font-display font-bold px-4 py-2.5 rounded-xl text-sm">
+                                📖 ${lang.guideBtn}
+                            </button>
+                            ${allCompleted ? `
+                                <button onclick="state.screen='certificate'; render();" class="btn-game glow-gold bg-amber-400 hover:bg-amber-300 border-amber-700 text-amber-950 font-display font-bold px-4 py-2.5 rounded-xl text-sm">
+                                    ${lang.certificateBtn}
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Grid 4 Pos Petualangan -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                        ${lang.levels.map((lvl, idx) => {
+                            const prog = state.progress[lvl.id];
+                            const theme = levelColors[idx];
+                            return `
+                                <div class="wood-panel rounded-3xl p-5 flex flex-col justify-between hover:scale-[1.01] transition-transform relative">
+                                    ${prog.completed ? `
+                                        <div class="absolute -top-3 -right-3 bg-emerald-500 text-white font-display font-bold text-xs px-3 py-1 rounded-full border-2 border-white shadow">
+                                            ✓ ${lang.statusDone}
+                                        </div>
+                                    ` : ''}
+
+                                    <div>
+                                        <div class="flex items-center justify-between gap-2 mb-3">
+                                            <span class="${theme.badge} font-extrabold text-xs px-3 py-1 rounded-full uppercase tracking-wide">
+                                                Level ${lvl.id} • ${lvl.pillar}
+                                            </span>
+                                            <span class="text-lg">
+                                                ${prog.completed ? '⭐'.repeat(prog.stars) + '☆'.repeat(3 - prog.stars) : '☆☆☆'}
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-start gap-4 mb-4">
+                                            <div class="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br ${theme.bg} text-white text-3xl flex items-center justify-center shadow-md border-2 border-white">
+                                                ${lvl.npcIcon}
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-bold text-wood-main">📍 ${lvl.location} • ${lvl.npc}</div>
+                                                <h3 class="font-display font-bold text-xl text-slate-800 leading-snug">${lvl.title}</h3>
+                                                <p class="text-xs sm:text-sm text-slate-600 mt-1 line-clamp-2">${lvl.story}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button onclick="startLevel(${lvl.id})" class="btn-game w-full bg-gradient-to-r ${theme.bg} ${theme.border} text-white font-display font-bold py-3 rounded-xl text-base shadow flex items-center justify-center gap-2">
+                                        <span>${prog.completed ? '🔄' : '🎮'}</span>
+                                        <span>${lang.statusPlay}</span>
+                                    </button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    <div class="text-center">
+                        <button onclick="resetAllProgress()" class="text-xs font-bold text-wood-main hover:text-rose-700 underline">
+                            ${lang.resetBtn}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* --- SCREEN 4: ARENA BERMAIN LEVEL 1 - 4 --- */
+        function renderLevelScreen(id) {
+            const lang = t();
+            const lvl = lang.levels[id - 1];
+
+            let interactiveArea = '';
+            if (id === 1) interactiveArea = renderLevel1Board();
+            if (id === 2) interactiveArea = renderLevel2Board();
+            if (id === 3) interactiveArea = renderLevel3Board();
+            if (id === 4) interactiveArea = renderLevel4Board();
+
+            return `
+                <div class="w-full max-w-5xl mx-auto relative">
+                    <!-- Navigasi Atas Level -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <button onclick="goToMap()" class="btn-game bg-white hover:bg-amber-50 border-wood-main text-wood-dark font-display font-bold px-4 py-2 rounded-xl text-sm">
+                            ${lang.backToMap}
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-forest-dark text-white font-display font-bold text-xs sm:text-sm px-4 py-1.5 rounded-full">
+                                Level ${lvl.id}: ${lvl.pillar}
+                            </span>
+                            <button onclick="showLevelHint(${lvl.id})" class="btn-game bg-amber-400 hover:bg-amber-300 border-amber-600 text-amber-950 font-display font-bold px-3.5 py-1.5 rounded-xl text-xs sm:text-sm">
+                                ${lang.hintBtn}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Kotak Cerita & Instruksi -->
+                    <div class="wood-panel rounded-3xl p-5 sm:p-6 mb-5">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b-2 border-wood-cream pb-4 mb-4">
+                            <div class="w-14 h-14 rounded-2xl bg-amber-100 border-2 border-amber-400 flex items-center justify-center text-3xl shrink-0">
+                                ${lvl.npcIcon}
+                            </div>
+                            <div>
+                                <h2 class="font-display font-bold text-xl sm:text-2xl text-forest-dark">${lvl.title}</h2>
+                                <p class="text-xs sm:text-sm text-slate-600 font-semibold mt-0.5">${lvl.story}</p>
+                            </div>
+                        </div>
+                        <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3.5 flex items-center gap-3">
+                            <span class="text-2xl">🤖</span>
+                            <p class="text-xs sm:text-sm font-bold text-sky-950">${lvl.instruction}</p>
+                        </div>
+                    </div>
+
+                    <!-- Area Permainan Konkret -->
+                    <div class="wood-panel rounded-3xl p-5 sm:p-6">
+                        ${interactiveArea}
+                    </div>
+
+                    <!-- OVERLAY KEMENANGAN LEVEL -->
+                    <div id="level-victory-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4">
+                        <div class="wood-panel rounded-3xl max-w-lg w-full p-6 sm:p-8 text-center">
+                            <div class="text-5xl mb-2 animate-bounce">🎉</div>
+                            <h3 class="font-display text-2xl sm:text-3xl font-bold text-forest-dark mb-1">
+                                ${state.lang === 'id' ? 'Misi Berhasil Diselesaikan!' : 'Mission Accomplished!'}
+                            </h3>
+                            <div id="vic-stars" class="text-3xl my-2">⭐⭐⭐</div>
+                            <div id="vic-score" class="inline-block bg-amber-100 text-amber-900 font-display font-bold px-4 py-1 rounded-full text-sm mb-4">
+                                +100 Poin
+                            </div>
+
+                            <!-- Refleksi Pedagogis -->
+                            <div class="bg-forest-mint border-2 border-forest-light rounded-2xl p-4 text-left mb-6">
+                                <div class="font-display font-bold text-forest-dark text-sm mb-1 flex items-center gap-1.5">
+                                    <span>🧠</span>
+                                    <span>${state.lang === 'id' ? 'Refleksi Berpikir Komputasional:' : 'Computational Thinking Reflection:'}</span>
+                                </div>
+                                <p id="vic-pedagogy" class="text-xs sm:text-sm text-slate-800 font-semibold leading-relaxed"></p>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <button onclick="goToMap()" class="btn-game flex-1 bg-white hover:bg-slate-100 border-slate-400 text-slate-700 font-display font-bold py-3 rounded-xl">
+                                    ${lang.backToMap}
+                                </button>
+                                ${id < 4 ? `
+                                    <button onclick="startLevel(${id + 1})" class="btn-game flex-1 bg-forest-main hover:bg-forest-light border-forest-dark text-white font-display font-bold py-3 rounded-xl">
+                                        ${lang.nextLevelBtn}
+                                    </button>
+                                ` : `
+                                    <button onclick="state.screen='certificate'; render();" class="btn-game flex-1 bg-amber-400 hover:bg-amber-300 border-amber-700 text-amber-950 font-display font-bold py-3 rounded-xl">
+                                        ${lang.finishAllBtn}
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showLevelHint(id) {
+            playSFX('click');
+            const lang = t();
+            const hints = { 1: lang.l1Hint, 2: lang.l2Hint, 3: lang.l3Hint, 4: lang.l4Hint };
+            showToast(hints[id], 'info');
+        }
+
+        /* ==========================================================================
+           6. LOGIKA MASING-MASING LEVEL (1 - 4)
+           ========================================================================== */
+
+        /* --- LEVEL 1: DEKOMPOSISI (MEMBANGUN JEMBATAN SUNGAI) --- */
+        function renderLevel1Board() {
+            const lang = t();
+            const st = state.l1;
+
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                    <!-- Visual Sungai & Jembatan Bertahap -->
+                    <div class="bg-gradient-to-b from-sky-200 to-blue-400 rounded-2xl p-5 border-2 border-sky-500 relative min-h-[260px] flex flex-col justify-between overflow-hidden">
+                        <div class="bg-white/90 rounded-xl px-3 py-2 text-xs sm:text-sm font-extrabold text-blue-950 text-center shadow">
+                            ${st.currentStage < 3 ? lang.l1Stages[st.currentStage] : (state.lang === 'id' ? '✅ Jembatan Terpasang Sempurna!' : '✅ Bridge Fully Rebuilt!')}
+                        </div>
+
+                        <!-- Struktur Jembatan 3 Lapis -->
+                        <div class="my-4 flex flex-col items-center justify-end gap-2 z-10">
+                            <!-- Lapis 3: Papan Lantai -->
+                            <div class="w-4/5 h-10 rounded-xl border-2 border-dashed flex items-center justify-center font-bold text-sm transition-all ${st.placed[2] ? 'bg-amber-600 border-amber-900 text-white shadow-md' : 'bg-white/40 border-white text-blue-950'}">
+                                ${st.placed[2] ? '🪜 ' + (state.lang === 'id' ? 'Papan Lantai Jembatan' : 'Bridge Deck Planks') : '3. ?'}
+                            </div>
+                            <!-- Lapis 2: Balok Penyangga -->
+                            <div class="w-3/5 h-12 rounded-xl border-2 border-dashed flex items-center justify-center font-bold text-sm transition-all ${st.placed[1] ? 'bg-amber-800 border-amber-950 text-amber-100 shadow-md' : 'bg-white/40 border-white text-blue-950'}">
+                                ${st.placed[1] ? '🪵 ' + (state.lang === 'id' ? 'Balok Penyangga' : 'Support Beams') : '2. ?'}
+                            </div>
+                            <!-- Lapis 1: Fondasi Batu -->
+                            <div class="w-2/3 h-12 rounded-xl border-2 border-dashed flex items-center justify-center font-bold text-sm transition-all ${st.placed[0] ? 'bg-slate-600 border-slate-800 text-white shadow-md' : 'bg-white/40 border-white text-blue-950'}">
+                                ${st.placed[0] ? '🪨 ' + (state.lang === 'id' ? 'Fondasi Batu' : 'Stone Foundation') : '1. ?'}
+                            </div>
+                        </div>
+
+                        <!-- Gelombang Air Sungai -->
+                        <div class="w-full h-6 bg-blue-600/60 rounded-lg flex items-center justify-around text-white text-xs font-bold">
+                            <span>〰️</span><span>🐟</span><span>〰️</span><span>〰️</span>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Komponen Konkret -->
+                    <div>
+                        <h3 class="font-display font-bold text-lg text-wood-dark mb-3">
+                            ${state.lang === 'id' ? 'Pilih Material yang Tepat:' : 'Select the Right Material:'}
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            ${lang.l1Items.map(item => `
+                                <button onclick="handleLevel1Select('${item.id}', ${item.stage})" class="btn-game bg-amber-50 hover:bg-amber-100 border-wood-main p-3.5 rounded-2xl flex flex-col items-center text-center gap-1.5">
+                                    <span class="text-3xl">${item.icon}</span>
+                                    <span class="font-bold text-xs sm:text-sm text-slate-800">${item.name}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleLevel1Select(itemId, itemStage) {
+            const st = state.l1;
+            if (st.currentStage >= 3) return;
+
+            if (itemStage === st.currentStage) {
+                playSFX('success');
+                st.placed[st.currentStage] = true;
+                st.currentStage++;
+                render();
+
+                if (st.currentStage === 3) {
+                    const stars = st.mistakes === 0 ? 3 : (st.mistakes <= 2 ? 2 : 1);
+                    const score = Math.max(60, 100 - st.mistakes * 15);
+                    setTimeout(() => completeLevel(1, stars, score, t().levels[0].pedagogyFeedback), 400);
+                }
+            } else {
+                playSFX('error');
+                st.mistakes++;
+                showToast(
+                    state.lang === 'id'
+                        ? 'Kurang tepat! Perhatikan urutan tahapan pembangunan dari bawah ke atas.'
+                        : 'Not quite right! Check the construction stage order from bottom to top.',
+                    'error'
+                );
+            }
+        }
+
+        /* --- LEVEL 2: PENGENALAN POLA (KEBUN KRISTAL & BUNGA) --- */
+        function renderLevel2Board() {
+            const lang = t();
+            const rows = state.l2.rows;
+
+            return `
+                <div class="space-y-5">
+                    ${rows.map((row, rIdx) => `
+                        <div class="bg-forest-mint/50 border-2 border-forest-light rounded-2xl p-4 flex flex-col lg:flex-row items-center justify-between gap-4">
+                            <!-- Deret Pola -->
+                            <div class="flex flex-wrap items-center justify-center gap-2">
+                                <span class="font-display font-bold text-forest-dark text-sm mr-1">#${rIdx + 1}</span>
+                                ${row.seq.map(cell => {
+                                    const isMissing = cell === '?';
+                                    const chosen = state.l2.answers[rIdx];
+                                    return `
+                                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-sm border-2 ${isMissing ? 'bg-amber-100 border-amber-500 border-dashed font-bold text-amber-800' : 'bg-white border-emerald-300'}">
+                                            ${isMissing ? (chosen || '?') : cell}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+
+                            <!-- Pilihan Jawaban Baris -->
+                            <div class="flex items-center gap-2 bg-white/80 px-3 py-2 rounded-2xl border border-emerald-200">
+                                <span class="text-xs font-extrabold text-slate-500 mr-1">${state.lang === 'id' ? 'Pilih:' : 'Pick:'}</span>
+                                ${row.options.map(opt => {
+                                    const isSelected = state.l2.answers[rIdx] === opt;
+                                    return `
+                                        <button onclick="selectLevel2Option(${rIdx}, '${opt}')" class="btn-game w-11 h-11 rounded-xl text-2xl flex items-center justify-center ${isSelected ? 'bg-amber-400 border-amber-700 scale-105' : 'bg-slate-50 hover:bg-amber-50 border-slate-300'}">
+                                            ${opt}
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+
+                    <div class="flex justify-end pt-2">
+                        <button onclick="verifyLevel2()" class="btn-game bg-forest-main hover:bg-forest-light border-forest-dark text-white font-display font-bold px-6 py-3 rounded-xl text-base shadow">
+                            ${lang.checkAnswer}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectLevel2Option(rowIndex, val) {
+            playSFX('click');
+            state.l2.answers[rowIndex] = val;
+            render();
+        }
+
+        function verifyLevel2() {
+            const st = state.l2;
+            if (st.answers.includes(null)) {
+                playSFX('error');
+                showToast(state.lang === 'id' ? 'Lengkapi semua kotak tanda tanya (?) terlebih dahulu!' : 'Fill in all question mark (?) boxes first!', 'error');
+                return;
+            }
+
+            const allCorrect = st.rows.every((row, idx) => row.correct === st.answers[idx]);
+            if (allCorrect) {
+                const stars = st.mistakes === 0 ? 3 : (st.mistakes === 1 ? 2 : 1);
+                const score = Math.max(60, 100 - st.mistakes * 20);
+                completeLevel(2, stars, score, t().levels[1].pedagogyFeedback);
+            } else {
+                playSFX('error');
+                st.mistakes++;
+                showToast(state.lang === 'id' ? 'Ada pola yang belum tepat. Coba amati urutan pengulangannya lagi!' : 'One or more patterns are incorrect. Observe the repeating sequence again!', 'error');
+            }
+        }
+
+        /* --- LEVEL 3: ABSTRAKSI (GUDANG PERSEDIAAN BERUANG) --- */
+        function renderLevel3Board() {
+            const lang = t();
+            const selected = state.l3.selectedIds;
+
+            return `
+                <div>
+                    <div class="flex flex-wrap items-center justify-between gap-2 bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 mb-5">
+                        <span class="font-display font-bold text-wood-dark text-sm sm:text-base">
+                            🧺 ${lang.l3TargetLabel}
+                        </span>
+                        <span class="bg-amber-400 text-amber-950 font-display font-extrabold px-3 py-1 rounded-full text-sm">
+                            ${selected.length} / 5
+                        </span>
+                    </div>
+
+                    <!-- Grid 10 Benda di Gudang -->
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+                        ${lang.l3Items.map(item => {
+                            const isPicked = selected.includes(item.id);
+                            return `
+                                <button onclick="toggleLevel3Item('${item.id}')" class="btn-game p-3.5 rounded-2xl flex flex-col items-center text-center gap-1.5 transition ${isPicked ? 'bg-emerald-100 border-emerald-600 ring-2 ring-emerald-400' : 'bg-white hover:bg-amber-50 border-wood-light'}">
+                                    <span class="text-3xl sm:text-4xl">${item.icon}</span>
+                                    <span class="font-bold text-xs text-slate-800">${item.name}</span>
+                                    <span class="text-[11px] font-extrabold ${isPicked ? 'text-emerald-700' : 'text-slate-400'}">
+                                        ${isPicked ? '✓ Dipilih' : '+'}
+                                    </span>
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button onclick="verifyLevel3()" class="btn-game bg-forest-main hover:bg-forest-light border-forest-dark text-white font-display font-bold px-6 py-3 rounded-xl text-base shadow">
+                            ${lang.checkAnswer}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleLevel3Item(id) {
+            playSFX('click');
+            const idx = state.l3.selectedIds.indexOf(id);
+            if (idx > -1) {
+                state.l3.selectedIds.splice(idx, 1);
+            } else {
+                if (state.l3.selectedIds.length >= 5) {
+                    showToast(state.lang === 'id' ? 'Keranjang penuh (maksimal 5 benda). Hapus salah satu jika ingin mengganti.' : 'Basket is full (max 5 items). Deselect one to swap.', 'info');
+                    return;
+                }
+                state.l3.selectedIds.push(id);
+            }
+            render();
+        }
+
+        function verifyLevel3() {
+            const lang = t();
+            const selected = state.l3.selectedIds;
+            if (selected.length < 5) {
+                playSFX('error');
+                showToast(state.lang === 'id' ? 'Pilih tepat 5 bekal makanan/minuman yang penting!' : 'Please select 5 essential food/drink supplies!', 'error');
+                return;
+            }
+
+            const allValid = selected.every(id => {
+                const found = lang.l3Items.find(x => x.id === id);
+                return found && found.valid;
+            });
+
+            if (allValid) {
+                const stars = state.l3.mistakes === 0 ? 3 : (state.l3.mistakes === 1 ? 2 : 1);
+                const score = Math.max(60, 100 - state.l3.mistakes * 20);
+                completeLevel(3, stars, score, lang.levels[2].pedagogyFeedback);
+            } else {
+                playSFX('error');
+                state.l3.mistakes++;
+                showToast(state.lang === 'id' ? 'Ups! Ada benda non-makanan (perkakas/rongsokan) terbawa ke keranjang. Saring kembali!' : 'Oops! Non-food items (tools/junk) are in the basket. Filter again!', 'error');
+            }
+        }
+
+        /* --- LEVEL 4: ALGORITMA (LABIRIN PULANG SI KELINCI) --- */
+        function renderLevel4Board() {
+            const lang = t();
+            const st = state.l4;
+            const dirMeta = {
+                UP: { icon: '⬆️', label: lang.l4Up },
+                DOWN: { icon: '⬇️', label: lang.l4Down },
+                LEFT: { icon: '⬅️', label: lang.l4Left },
+                RIGHT: { icon: '➡️', label: lang.l4Right }
+            };
+
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <!-- Grid Labirin 5x5 (Kiri) -->
+                    <div class="lg:col-span-6 flex flex-col items-center">
+                        <div class="bg-emerald-800 p-3 rounded-3xl border-4 border-wood-dark shadow-inner">
+                            <div class="grid grid-cols-5 gap-1.5 sm:gap-2">
+                                ${st.grid.map((row, r) => row.map((cell, c) => {
+                                    const isBunny = st.bunnyPos.r === r && st.bunnyPos.c === c;
+                                    let bg = 'bg-emerald-100';
+                                    let content = '';
+                                    if (cell === 1) {
+                                        bg = 'bg-emerald-950/80';
+                                        content = (r + c) % 2 === 0 ? '🌵' : '🪨';
+                                    } else if (cell === 2) {
+                                        bg = 'bg-amber-200 ring-2 ring-amber-400';
+                                        content = '🥕';
+                                    }
+                                    if (isBunny) {
+                                        content = '🐰';
+                                    }
+                                    return `
+                                        <div class="w-12 h-12 sm:w-14 sm:h-14 ${bg} rounded-xl flex items-center justify-center text-2xl sm:text-3xl shadow-sm transition-all">
+                                            ${content}
+                                        </div>
+                                    `;
+                                }).join('')).join('')}
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-4 text-xs font-bold text-slate-600">
+                            <span>🐰 Start</span>
+                            <span>🥕 Target</span>
+                            <span>🌵🪨 Rintangan</span>
+                        </div>
+                    </div>
+
+                    <!-- Panel Susun Algoritma (Kanan) -->
+                    <div class="lg:col-span-6 space-y-4">
+                        <!-- Tombol Blok Perintah -->
+                        <div class="grid grid-cols-4 gap-2">
+                            ${['UP', 'DOWN', 'LEFT', 'RIGHT'].map(dir => `
+                                <button onclick="addLevel4Cmd('${dir}')" ${st.isRunning ? 'disabled' : ''} class="btn-game bg-sky-500 hover:bg-sky-400 border-sky-700 text-white py-2.5 px-2 rounded-xl flex flex-col items-center gap-0.5">
+                                    <span class="text-xl">${dirMeta[dir].icon}</span>
+                                    <span class="text-xs font-display font-bold">${dirMeta[dir].label}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <!-- Antrean Blok Algoritma -->
+                        <div class="bg-slate-900 rounded-2xl p-4 min-h-[130px] border-2 border-slate-700">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-display font-bold text-emerald-400 uppercase tracking-wider">
+                                    ${lang.l4QueueTitle} (${st.commands.length}/12)
+                                </span>
+                                <button onclick="clearLevel4Cmds()" ${st.isRunning ? 'disabled' : ''} class="text-xs font-bold text-rose-400 hover:text-rose-300">
+                                    ${lang.l4Clear}
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                ${st.commands.length === 0 ? `
+                                    <span class="text-slate-500 text-xs italic py-4">
+                                        ${state.lang === 'id' ? 'Klik tombol panah di atas untuk menyusun langkah...' : 'Click arrow buttons above to build steps...'}
+                                    </span>
+                                ` : st.commands.map((cmd, idx) => `
+                                    <div class="bg-slate-800 border border-slate-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
+                                        <span class="text-amber-400">${idx + 1}.</span>
+                                        <span>${dirMeta[cmd].icon}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Tombol Jalankan -->
+                        <button onclick="runLevel4Program()" ${st.isRunning || st.commands.length === 0 ? 'disabled' : ''} class="btn-game w-full bg-emerald-500 hover:bg-emerald-400 border-emerald-700 text-white font-display font-bold py-3.5 rounded-xl text-base shadow-lg">
+                            ${lang.l4Run}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addLevel4Cmd(dir) {
+            if (state.l4.isRunning) return;
+            if (state.l4.commands.length >= 12) {
+                showToast(state.lang === 'id' ? 'Maksimal 12 langkah perintah!' : 'Maximum 12 command steps!', 'info');
+                return;
+            }
+            playSFX('click');
+            state.l4.commands.push(dir);
+            render();
+        }
+
+        function clearLevel4Cmds() {
+            if (state.l4.isRunning) return;
+            playSFX('click');
+            state.l4.commands = [];
+            state.l4.bunnyPos = { r: 3, c: 0 };
+            render();
+        }
+
+        function runLevel4Program() {
+            const st = state.l4;
+            if (st.isRunning || st.commands.length === 0) return;
+
+            st.isRunning = true;
+            st.bunnyPos = { r: 3, c: 0 };
+            render();
+
+            let step = 0;
+            const interval = setInterval(() => {
+                if (step >= st.commands.length) {
+                    clearInterval(interval);
+                    st.isRunning = false;
+                    // Cek apakah sampai di wortel (r=0, c=4)
+                    if (st.grid[st.bunnyPos.r][st.bunnyPos.c] === 2) {
+                        const stars = st.mistakes === 0 ? 3 : (st.mistakes === 1 ? 2 : 1);
+                        const score = Math.max(60, 100 - st.mistakes * 20);
+                        completeLevel(4, stars, score, t().levels[3].pedagogyFeedback);
+                    } else {
+                        playSFX('error');
+                        st.mistakes++;
+                        showToast(state.lang === 'id' ? 'Kelinci belum sampai di wortel! Periksa kembali urutan langkahmu.' : 'Bunny has not reached the carrot yet! Check your step sequence.', 'error');
+                        st.bunnyPos = { r: 3, c: 0 };
+                        render();
+                    }
+                    return;
+                }
+
+                const cmd = st.commands[step];
+                let nr = st.bunnyPos.r;
+                let nc = st.bunnyPos.c;
+                if (cmd === 'UP') nr--;
+                if (cmd === 'DOWN') nr++;
+                if (cmd === 'LEFT') nc--;
+                if (cmd === 'RIGHT') nc++;
+
+                // Cek batas grid & rintangan
+                if (nr < 0 || nr >= 5 || nc < 0 || nc >= 5 || st.grid[nr][nc] === 1) {
+                    clearInterval(interval);
+                    st.isRunning = false;
+                    st.mistakes++;
+                    playSFX('error');
+                    showToast(state.lang === 'id' ? 'Menabrak rintangan atau keluar jalur! Kelinci kembali ke posisi awal.' : 'Hit an obstacle or went out of bounds! Bunny returned to start.', 'error');
+                    st.bunnyPos = { r: 3, c: 0 };
+                    render();
+                    return;
+                }
+
+                playSFX('click');
+                st.bunnyPos = { r: nr, c: nc };
+                render();
+
+                // Jika langsung menyentuh wortel
+                if (st.grid[nr][nc] === 2) {
+                    clearInterval(interval);
+                    st.isRunning = false;
+                    const stars = st.mistakes === 0 ? 3 : (st.mistakes === 1 ? 2 : 1);
+                    const score = Math.max(60, 100 - st.mistakes * 20);
+                    setTimeout(() => completeLevel(4, stars, score, t().levels[3].pedagogyFeedback), 300);
+                    return;
+                }
+
+                step++;
+            }, 420);
+        }
+
+        /* --- SCREEN 5: SERTIFIKAT & EVALUASI AKHIR --- */
+        function renderCertificateScreen() {
+            const lang = t();
+            const totalStars = Object.values(state.progress).reduce((acc, p) => acc + p.stars, 0);
+            const totalScore = Object.values(state.progress).reduce((acc, p) => acc + p.score, 0);
+
+            let rank = lang.ranks.apprentice;
+            if (totalScore >= 360) rank = lang.ranks.master;
+            else if (totalScore >= 280) rank = lang.ranks.explorer;
+
+            return `
+                <div class="wood-panel rounded-3xl p-6 sm:p-10 max-w-3xl mx-auto w-full text-center border-8 border-amber-400 bg-gradient-to-b from-amber-50 to-white">
+                    <div class="text-5xl mb-2">🎓🏆</div>
+                    <h2 class="font-display text-2xl sm:text-4xl font-bold text-forest-dark tracking-wide mb-1">
+                        ${lang.certTitle}
+                    </h2>
+                    <p class="text-sm sm:text-base font-bold text-amber-700 mb-5">${lang.certCongrats}</p>
+
+                    <p class="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto mb-4">
+                        ${lang.certBody}
+                    </p>
+
+                    <!-- Input Nama Siswa -->
+                    <div class="max-w-md mx-auto mb-6">
+                        <input type="text" oninput="state.studentName = this.value" value="${state.studentName}" placeholder="${lang.certStudentPlaceholder}" class="w-full text-center font-display font-bold text-xl sm:text-2xl text-wood-dark bg-white border-b-4 border-forest-main rounded-xl py-2.5 px-4 focus:outline-none focus:border-amber-500 shadow-inner" />
+                    </div>
+
+                    <!-- Statistik Skor -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                        <div class="bg-forest-mint border-2 border-forest-light rounded-2xl p-3">
+                            <div class="text-xs font-bold text-forest-dark">${lang.certScoreLbl}</div>
+                            <div class="font-display font-bold text-2xl text-forest-dark">${totalScore} / 400</div>
+                        </div>
+                        <div class="bg-amber-100 border-2 border-amber-300 rounded-2xl p-3">
+                            <div class="text-xs font-bold text-amber-900">${lang.certStarsLbl}</div>
+                            <div class="font-display font-bold text-2xl text-amber-800">⭐ ${totalStars} / 12</div>
+                        </div>
+                        <div class="bg-sky-100 border-2 border-sky-300 rounded-2xl p-3">
+                            <div class="text-xs font-bold text-sky-900">${lang.certRankLbl}</div>
+                            <div class="font-display font-bold text-sm sm:text-base text-sky-950 mt-1">${rank}</div>
+                        </div>
+                    </div>
+
+                    <div class="text-xs font-bold text-wood-main mb-6">
+                        Hutan Logika (Logic Forest) • Informatika SMP Kelas VII • Pengembang: Fitria Badrujalil
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-center gap-3">
+                        <button onclick="goToMap()" class="btn-game bg-forest-main hover:bg-forest-light border-forest-dark text-white font-display font-bold px-6 py-3 rounded-xl">
+                            ${lang.backToMap}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Inisialisasi Awal saat Halaman Dimuat
+        window.onload = function() {
+            render();
+        };
+    </script>
+</body>
+</html>
